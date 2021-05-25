@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
+  Version:6.0
   This AWS CloudFormation template installs the Aqua Command Center componants
   in ECS.
 Metadata:
