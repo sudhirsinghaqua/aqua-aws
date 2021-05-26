@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
+  Version:6.2
   This AWS CloudFormation template installs the Aqua Command Center componants
   in ECS EC2.
 Metadata:
@@ -590,7 +591,7 @@ Resources:
         - '-'
         - - aqua-gateway
           - !Join ["-", ["td", !GetAtt SampleString.RandomString]]
-      DesiredCount: 2
+      DesiredCount: 1
       PlacementStrategies:
         - Type: spread
           Field: 'attribute:ecs.availability-zone'
