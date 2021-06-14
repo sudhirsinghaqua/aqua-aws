@@ -157,6 +157,7 @@ Conditions:
   NotCreateActiveActive: !Equals [ !Ref ActiveActive, 'false' ]
   CreateAuditrds: !Equals [!Ref AuditRDS, 'Yes']
   ReplaceAuditrds: !Equals [!Ref AuditRDS, 'No']
+  Privilegedfalse: !Equals [!Ref Taskprivileged, 'false']
 Resources:
   #Role for generating a Random string
   LambdaExecutionRole:
@@ -693,19 +694,23 @@ Resources:
           Privileged: !Ref Taskprivileged
           LinuxParameters:
             Capabilities:
-              ADD:
-                - SYS_ADMIN
-                - NET_ADMIN
-                - NET_RAW
-                - SYS_PTRACE
-                - KILL
-                - MKNOD
-                - SETGID
-                - SETUID
-                - SYS_MODULE
-                - AUDIT_CONTROL
-                - SYSLOG
-                - SYS_CHROOT
+              Add:
+                !If 
+                  - Privilegedfalse
+                  -
+                    - SYS_ADMIN
+                    - NET_ADMIN
+                    - NET_RAW
+                    - SYS_PTRACE
+                    - KILL
+                    - MKNOD
+                    - SETGID
+                    - SETUID
+                    - SYS_MODULE
+                    - AUDIT_CONTROL
+                    - SYSLOG
+                    - SYS_CHROOT
+                  - !Ref "AWS::NoValue" 
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -878,8 +883,8 @@ Resources:
                   - 'secretsmanager:*'
                 Resource:
                   - !Ref Secret1
-                  - !Ref SecretAuditP
-                  - !Ref SecretAuditU
+                  - !If [CreateAuditrds, !Ref SecretAuditP, !Ref "AWS::NoValue"]
+                  - !If [CreateAuditrds, !Ref SecretAuditU, !Ref "AWS::NoValue"]
                   - !Ref SecretP
                   - !Ref SecretU
         - PolicyName: !Join
@@ -1011,7 +1016,7 @@ Resources:
 Outputs:
   AquaConsole:
     Description: URL to access Aqua Security Console
-    Value: !Join ["-", ['https://', !GetAtt AquaConsoleLB.DNSName]]
+    Value: !Join ["", ['https://', !GetAtt AquaConsoleLB.DNSName]]
   AquaGatewayExternalConnection:
     Description: >-
       Aqua Enforcer gateway startup connection string for use when Enforcers are
