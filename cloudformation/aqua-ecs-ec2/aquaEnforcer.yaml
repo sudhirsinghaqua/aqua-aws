@@ -44,6 +44,8 @@ Parameters:
     ECSClusterName:
         Type: String
         Description: Enter the existing ECS Cluster name.
+Conditions:
+  Privilegedfalse: !Equals [!Ref Taskprivileged, 'false']         
 Resources:
     LambdaExecutionRole:
         Type: AWS::IAM::Role
@@ -132,18 +134,22 @@ Resources:
               LinuxParameters:
                 Capabilities:
                   ADD:
-                    - SYS_ADMIN
-                    - NET_ADMIN
-                    - NET_RAW
-                    - SYS_PTRACE
-                    - KILL
-                    - MKNOD
-                    - SETGID
-                    - SETUID
-                    - SYS_MODULE
-                    - AUDIT_CONTROL
-                    - SYSLOG
-                    - SYS_CHROOT
+                    !If 
+                      - Privilegedfalse
+                      -
+                        - SYS_ADMIN
+                        - NET_ADMIN
+                        - NET_RAW
+                        - SYS_PTRACE
+                        - KILL
+                        - MKNOD
+                        - SETGID
+                        - SETUID
+                        - SYS_MODULE
+                        - AUDIT_CONTROL
+                        - SYSLOG
+                        - SYS_CHROOT
+                      - !Ref "AWS::NoValue"
               LogConfiguration:
                 LogDriver: awslogs
                 Options:
