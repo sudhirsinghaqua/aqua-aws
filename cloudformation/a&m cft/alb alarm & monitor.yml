@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: SNS Topic
+Parameters:
+  AvailabilityZone:
+    Type: String
+    Description: existing AvailabilityZone
+
+  SNS:
+    Description: create a new topic or existing one. default is existing.
+    Type: String 
+    Default: 'existing'
+    AllowedValues:  
+      - 'new'
+      - 'existing'
+
+  Subscriptionprotocol:
+    Description: create a new protocol or existing one. default is existing.
+    Type: String 
+    Default: 'existing'
+    AllowedValues:  
+      - 'new'
+      - 'existing'
+
+  Existing:
+    Type: String
+    Description: existing SNSTopic ARN
+
+  ESP:
+    Type: String
+    Description: existing SubscriptionProtocol
+
+  TargetGroup:
+    Type: String
+    Description: existing TargetGroup
+
+  LoadBalancer:
+    Type: String
+    Description: existing LoadBalancer
+
+  SubscriptionEndPoint:
+    Type: String
+    Description: >-
+      The endpoint that receives notifications from the Amazon SNS topic. The
+      endpoint value depends on the protocol that you specify. This could be a
+      URL or ARN
+
+  Subscription:
+    Type: String
+    Description: The subscription's protocol
+    AllowedValues:
+      - http
+      - https
+      - email
+      - email-json
+      - sms
+      - sqs
+      - application
+      - lambda
+    Default: sqs
+Conditions:    
+  CreateNewSNSTopic: !Equals [!Ref SNS, 'new']
+  CreateNewSubscriptionprotocol: !Equals [!Ref Subscriptionprotocol , 'new']    
+Resources:
+  SNSTopic:
+    Type: 'AWS::SNS::Topic'
+    Condition: CreateNewSNSTopic
+    Properties: {}
+
+  SNSSubscription:
+    Type: 'AWS::SNS::Subscription'
+    Condition: CreateNewSubscriptionprotocol
+    Properties:
+      Endpoint: !Ref SubscriptionEndPoint
+      Protocol: !If [CreateNewSubscriptionprotocol, !Ref Subscription , !Ref ESP  ]
+      TopicArn: !If [CreateNewSNSTopic, !Ref SNSTopic, !Ref Existing ]
+
+  CloudWatchAlarm3:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmName: "aws-alarm"
+      ActionsEnabled: true
+      AlarmActions: 
+        - !If [CreateNewSNSTopic, !Ref SNSTopic, !Ref Existing  ]
+      MetricName: "HealthyHostCount"
+      Namespace: "AWS/ApplicationELB"
+      Statistic: "Average"
+      Dimensions: 
+        - 
+          Name: "TargetGroup"
+          Value: !Ref "TargetGroup"
+        - 
+          Name: "LoadBalancer"
+          Value: !Ref "LoadBalancer"
+        - 
+          Name: "AvailabilityZone"
+          Value: !Ref "AvailabilityZone"
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 10
+      ComparisonOperator: "GreaterThanThreshold"
+      TreatMissingData: "missing"         
+
+Outputs:
+  TopicARN:
+    Condition: CreateNewSNSTopic
+    Description: ARN of newly created SNS Topic
+    Value: !Ref SNSTopic
+  #QueueName:
+  #  Description: Name of newly created SNS Topic
+  #  Value: !GetAtt 
+  #    - SNSTopic
+  #    - TopicName    
