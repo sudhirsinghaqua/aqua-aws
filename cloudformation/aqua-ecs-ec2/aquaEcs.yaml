@@ -199,6 +199,7 @@ Conditions:
   NotCreateActiveActive: !Equals [ !Ref ActiveActive, 'false' ]
   CreateAuditrds: !Equals [!Ref AuditRDS, 'Yes']
   ReplaceAuditrds: !Equals [!Ref AuditRDS, 'No']
+  Privilegedfalse: !Equals [!Ref Taskprivileged, 'false']
 Resources:
   #Role for generating a Random string
   LambdaExecutionRole:
@@ -655,18 +656,22 @@ Resources:
           LinuxParameters:
             Capabilities:
               ADD:
-                - SYS_ADMIN
-                - NET_ADMIN
-                - NET_RAW
-                - SYS_PTRACE
-                - KILL
-                - MKNOD
-                - SETGID
-                - SETUID
-                - SYS_MODULE
-                - AUDIT_CONTROL
-                - SYSLOG
-                - SYS_CHROOT
+                !If 
+                  - Privilegedfalse
+                  -
+                    - SYS_ADMIN
+                    - NET_ADMIN
+                    - NET_RAW
+                    - SYS_PTRACE
+                    - KILL
+                    - MKNOD
+                    - SETGID
+                    - SETUID
+                    - SYS_MODULE
+                    - AUDIT_CONTROL
+                    - SYSLOG
+                    - SYS_CHROOT
+                  - !Ref "AWS::NoValue"
           LogConfiguration:
             LogDriver: awslogs
             Options:
